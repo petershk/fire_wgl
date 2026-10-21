@@ -1,5 +1,7 @@
 # PyroGL — Interactive WebGL2 Fire & Fluid Combustion Simulation
 
+### **[🚀 Launch Live Demo in Browser (https://petershk.github.io/fire_wgl/)](https://petershk.github.io/fire_wgl/)**
+
 **PyroGL** is a real-time, physically inspired **Eulerian Navier-Stokes fluid & combustion simulation** built in pure **WebGL2** with zero external dependencies. It simulates buoyant reactive flames, turbulent vorticity, blackbody/chemical radiation, soot formation, heat-haze refraction, and 2-way fluid-solid interaction with draggable obstacles.
 
 ---
