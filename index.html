@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WebGL2 Interactive Fire & Fluid Combustion Lab</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <canvas id="fireCanvas"></canvas>
+
+  <!-- Top Bar: Quick Background & View Mode Switcher -->
+  <header class="top-bar">
+    <div class="brand">
+      <span class="fire-dot"></span>
+      <div>
+        <h1>PyroGL <span class="badge">WebGL2 Navier-Stokes Combustion</span></h1>
+        <p class="subtitle">Drag the object through the flames &bull; Scroll to resize object &bull; Right-drag to blow wind</p>
+      </div>
+    </div>
+
+    <div class="bg-switcher" role="group" aria-label="Background Switcher">
+      <span class="group-label">Background:</span>
+      <button class="bg-btn active" data-bg="0" title="Stone Hearth with dynamic normal-mapped firelight">Brick Hearth</button>
+      <button class="bg-btn" data-bg="1" title="High-contrast optical grid to clearly see heat refraction & smoke absorption">Optical Grid</button>
+      <button class="bg-btn" data-bg="2" title="Bright daylight/twilight sky to see dark soot & smoke contrast">Daylight Sky</button>
+      <button class="bg-btn" data-bg="3" title="Pure dark obsidian chamber">Dark Void</button>
+      <button class="bg-btn" data-bg="4" title="Schlieren / Diagnostic Refractive & Velocity View">Schlieren Lab</button>
+    </div>
+  </header>
+
+  <!-- Right Control Panel -->
+  <aside class="control-panel" id="controlPanel">
+    <div class="panel-header">
+      <h2>Simulation Controls</h2>
+      <button id="togglePanelBtn" class="icon-btn" title="Collapse/Expand Panel">&minus;</button>
+    </div>
+
+    <div class="panel-body" id="panelBody">
+      <!-- Interactive Collider Section -->
+      <section class="control-section">
+        <h3>Interactive Object (Collider)</h3>
+        <div class="shape-grid">
+          <button class="shape-btn active" data-shape="0">Sphere</button>
+          <button class="shape-btn" data-shape="1">Square Block</button>
+          <button class="shape-btn" data-shape="2">Wing / Blade</button>
+          <button class="shape-btn" data-shape="3">Hollow Ring</button>
+          <button class="shape-btn" data-shape="4">Cross Baffle</button>
+          <button class="shape-btn" data-shape="5">Hide Object</button>
+        </div>
+
+        <label class="slider-row">
+          <span>Object Size</span>
+          <input type="range" id="objRadius" min="0.03" max="0.20" step="0.005" value="0.085" />
+          <output id="objRadiusVal">8.5%</output>
+        </label>
+
+        <label class="slider-row">
+          <span>Object Angle</span>
+          <input type="range" id="objAngle" min="-180" max="180" step="1" value="-20" />
+          <output id="objAngleVal">-20&deg;</output>
+        </label>
+
+        <label class="slider-row">
+          <span>Object Thermal Interaction</span>
+          <select id="objThermalMode">
+            <option value="0" selected>Neutral Collider (Heats Up & Glows)</option>
+            <option value="1">Cryo / Cold Sink (Quenches Flame)</option>
+            <option value="2">Superheated Igniter (Emits Flame)</option>
+          </select>
+        </label>
+      </section>
+
+      <!-- Flame Physics & Chemistry Section -->
+      <section class="control-section">
+        <h3>Flame Physics &amp; Chemistry</h3>
+
+        <label class="slider-row">
+          <span>Flame Chemistry</span>
+          <select id="flamePalette">
+            <option value="0" selected>Blackbody Hydrocarbon (Wood/Gas)</option>
+            <option value="1">Copper Chloride (Emerald Blue-Green)</option>
+            <option value="2">Lithium / Strontium (Crimson Plasma)</option>
+            <option value="3">Oxy-Acetylene (Blue-Violet Core)</option>
+          </select>
+        </label>
+
+        <label class="slider-row">
+          <span>Fuel Feed Rate</span>
+          <input type="range" id="fuelRate" min="0.2" max="2.5" step="0.05" value="1.15" />
+          <output id="fuelRateVal">1.15</output>
+        </label>
+
+        <label class="slider-row">
+          <span>Turbulence (Vorticity)</span>
+          <input type="range" id="vorticity" min="0" max="65" step="1" value="36" />
+          <output id="vorticityVal">36</output>
+        </label>
+
+        <label class="slider-row">
+          <span>Buoyancy Lift</span>
+          <input type="range" id="buoyancy" min="0.5" max="5.0" step="0.1" value="2.4" />
+          <output id="buoyancyVal">2.4</output>
+        </label>
+
+        <label class="slider-row">
+          <span>Cooling Rate (Flame Height)</span>
+          <input type="range" id="cooling" min="0.4" max="3.5" step="0.05" value="1.35" />
+          <output id="coolingVal">1.35</output>
+        </label>
+
+        <label class="slider-row">
+          <span>Crosswind</span>
+          <input type="range" id="windX" min="-2.0" max="2.0" step="0.05" value="0.0" />
+          <output id="windXVal">0.00</output>
+        </label>
+      </section>
+
+      <!-- Optical & Background Effects -->
+      <section class="control-section">
+        <h3>Optics &amp; Background Visibility</h3>
+
+        <label class="slider-row">
+          <span>Heat Haze Refraction</span>
+          <input type="range" id="refraction" min="0.0" max="2.5" step="0.05" value="1.0" />
+          <output id="refractionVal">1.00</output>
+        </label>
+
+        <label class="slider-row">
+          <span>Smoke &amp; Soot Density</span>
+          <input type="range" id="smokeOpacity" min="0.0" max="2.5" step="0.05" value="1.1" />
+          <output id="smokeOpacityVal">1.10</output>
+        </label>
+
+        <label class="slider-row">
+          <span>Burner Width</span>
+          <input type="range" id="burnerWidth" min="0.06" max="0.55" step="0.01" value="0.22" />
+          <output id="burnerWidthVal">22%</output>
+        </label>
+
+        <label class="slider-row">
+          <span>Burner Mode</span>
+          <select id="burnerMode">
+            <option value="0" selected>Campfire Logs / Multi-Jet</option>
+            <option value="1">Wide Ribbon Burner</option>
+            <option value="2">Focused Blowtorch Jet</option>
+            <option value="3">Twin Counter-Vortex Burners</option>
+          </select>
+        </label>
+
+        <div class="checkbox-row">
+          <label><input type="checkbox" id="showEmbers" checked /> Glowing Sparks &amp; Embers</label>
+          <label><input type="checkbox" id="showFlowVectors" /> Velocity Field Overlay</label>
+        </div>
+      </section>
+
+      <div class="action-row">
+        <button id="burstBtn" class="action-btn primary">Fireball Burst</button>
+        <button id="resetObjBtn" class="action-btn">Center Object in Flame</button>
+      </div>
+    </div>
+
+    <footer class="panel-footer">
+      <span id="fpsCounter">60 FPS</span>
+      <span id="simResLabel">Sim: 384&times;384</span>
+    </footer>
+  </aside>
+
+  <script src="shaders.js"></script>
+  <script src="sim.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
